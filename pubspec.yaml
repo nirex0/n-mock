@@ -1,0 +1,30 @@
+name: nmock
+description: "Nirex's Personal Mock Location App"
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  fluttermocklocation: ^0.0.3
+  get: ^4.6.6
+  flutter_map: ^6.1.0
+  flutter_map_tile_caching: ^9.0.1
+  permission_handler: ^11.3.1
+  font_awesome_flutter: ^10.7.0
+  flutter_background: ^1.2.0
+  flutter_isolate: ^2.0.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
