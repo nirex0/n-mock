@@ -19,3 +19,5 @@ A simple Mock (Fake) Location Application written for android devices using flut
 The Settings are quite self explanatory.
 
 ## Virus Total Results for the Pre-built APK
+
+[Results](https://www.virustotal.com/gui/url/2f029acb050f262451a5acb1c8e0c9e7d0847687db393d61fd0c57922ea1ba5c?nocache=1)
