@@ -2,24 +2,17 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter_isolate/flutter_isolate.dart';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttermocklocation/fluttermocklocation.dart';
 import 'package:get/get.dart';
 import 'package:nmock/button.dart';
 import 'package:nmock/map.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'package:nmock/notification_service.dart';
 import 'package:nmock/settings.dart';
 import 'package:nmock/styles.dart';
-
-@pragma('vm:entry-point')
-void _isolateFunction(String arg) {
-  while (true) {
-    sleep(const Duration(seconds: 1));
-  }
-}
 
 _timerFunction() {
   if (mapData.pinsData.isNotEmpty) {
@@ -34,29 +27,73 @@ _timerFunction() {
   }
 }
 
+_initBackgroundPermissions() async {
+  notifyService = NotificationService();
+
+  // Run app in Background
+  const androidConfig = FlutterBackgroundAndroidConfig();
+  await FlutterBackground.initialize(androidConfig: androidConfig);
+  await FlutterBackground.enableBackgroundExecution();
+}
+
+_initNotificatonPermissions() async {
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
+
+  var initializationSettingsAndroid =
+      const AndroidInitializationSettings('@mipmap/ic_launcher');
+  var initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+      '1200', 'n-mock',
+      ongoing: true,
+      autoCancel: false,
+      channelDescription: 'N-Mock Running',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false);
+
+  var platformChannelSpecifics =
+      NotificationDetails(android: androidPlatformChannelSpecifics);
+
+  await flutterLocalNotificationsPlugin.show(
+      0,
+      'N-Mock',
+      'N-Mock Fake Location Running in the background',
+      platformChannelSpecifics,
+      payload: 'item x');
+}
+
+late NotificationService notifyService;
 late Timer globalTimer;
-var currentInterval = 0;
 var iter = 0;
 
 Future<void> main() async {
   // Ensure Widget Initialization
   WidgetsFlutterBinding.ensureInitialized();
 
-  globalTimer = Timer.periodic(
-      Duration(seconds: settingsData.intervalSeconds.value), (timer) {
-    _timerFunction();
+  Timer(const Duration(seconds: 3), () {
+    _initBackgroundPermissions();
   });
-
-  // Run app in Background
-  const androidConfig = FlutterBackgroundAndroidConfig();
-  await FlutterBackground.initialize(androidConfig: androidConfig);
-  await FlutterBackground.enableBackgroundExecution();
-  FlutterIsolate.spawn(_isolateFunction, '');
+  Timer(const Duration(seconds: 3), () {
+    _initNotificatonPermissions();
+  });
 
   // Initialize Map Caching ObjectBox Database
   await FMTCObjectBoxBackend().initialise();
   await const FMTCStore('googleTilesMapStore').manage.create();
 
+  globalTimer = Timer.periodic(
+      Duration(seconds: settingsData.intervalSeconds.value), (timer) {
+    _timerFunction();
+  });
   // Run the App
   runApp(const MyApp());
 }
